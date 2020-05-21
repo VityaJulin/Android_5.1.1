@@ -115,9 +115,10 @@ public class ListViewActivity extends AppCompatActivity {
             FileReader reader = null;
             try {
                 String str = "";
+                int current = 0;
                 reader = new FileReader(saveData);
-                while (reader.read() != -1) {
-                    str += (char) (reader.read());
+                while ((current = reader.read()) != -1) {
+                    str += (char) (current);
                 }
 
                 return str;
