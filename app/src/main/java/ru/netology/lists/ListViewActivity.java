@@ -14,6 +14,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -27,6 +29,8 @@ public class ListViewActivity extends AppCompatActivity {
     private static final String KEY_TITLE = "key_title";
     private static final String KEY_COUNT = "key_count";
     private static List<Map<String, String>> simpleAdapterContent = new ArrayList<>();
+    private FloatingActionButton btnAddContent;
+    private int btnClickCounter = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,16 +38,15 @@ public class ListViewActivity extends AppCompatActivity {
         setContentView(R.layout.activity_list_view);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        btnAddContent = findViewById(R.id.btn_fab_add);
 
         final ListView list = findViewById(R.id.list);
         final SwipeRefreshLayout swipeRefresh = findViewById(R.id.swipe_refresh);
         final BaseAdapter listContentAdapter = createAdapter(simpleAdapterContent);
 
-
         String string = getString(R.string.large_text);
         saveToFile(string);
-
-        prepareContent();
+        final String[] titles = readFromFile().split("\n\n");
 
         list.setAdapter(listContentAdapter);
 
@@ -59,10 +62,19 @@ public class ListViewActivity extends AppCompatActivity {
         swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                prepareContent();
+                simpleAdapterContent.clear();
                 listContentAdapter.notifyDataSetChanged();
                 swipeRefresh.setRefreshing(false);
                 Toast.makeText(ListViewActivity.this, "Refreshed", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        btnAddContent.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                prepareContent(titles);
+                listContentAdapter.notifyDataSetChanged();
+
             }
         });
     }
@@ -73,15 +85,15 @@ public class ListViewActivity extends AppCompatActivity {
     }
 
     @NonNull
-    private void prepareContent() {
-        String[] titles = readFromFile().split("\n\n");
-        simpleAdapterContent.clear();
-        for (String title : titles) {
-            Map<String, String> map = new HashMap<>();
-            map.put(KEY_TITLE, title);
-            map.put(KEY_COUNT, String.valueOf(title.length()));
-            simpleAdapterContent.add(map);
+    private void prepareContent(String[] titles) {
+        Map<String, String> map = new HashMap<>();
+        map.put(KEY_TITLE, titles[btnClickCounter]);
+        map.put(KEY_COUNT, String.valueOf(titles[btnClickCounter].length()));
+        simpleAdapterContent.add(map);
+        if (btnClickCounter == titles.length) {
+            return;
         }
+        btnClickCounter++;
     }
 
     public void saveToFile(String string) {
